@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.0.xsd">
+
+    <!-- USER -->
+    <changeSet id="1" author="team2">
+        <insert tableName="USER">
+            <column name="ID" value="1"/>
+            <column name="FULLNAME" value="Thinh"/>
+            <column name="ATM" value="ATM"/>
+            <column name="EMAIL" value="nguyenquocthinh99@gmail.com"/>
+            <column name="PASSWORD" value="$2a$12$tUsM3tftkSRJuPv/awZYsuPULKfvL.BkTbgXAG4dJ3rVYUTEKLfZm"/>
+            <column name="AVATAR" value="avatar-default.jpg"/>
+            <column name="ROLE" value="OWNER"/>
+            <column name="STATUS" value="ACTIVE"/>
+            <column name="DEPARTMENT" value="ADMINISTRATION"/>
+            <column name="POSITION" value="MANAGER"/>
+        </insert>
+    </changeSet>
+
+    <!-- SETTING -->
+    <changeSet id="2" author="team2">
+        <insert tableName="SETTING">
+            <column name="ID" value="1"/>
+            <column name="CODE" value="USER"/>
+            <column name="IMAGE_TYPE" value="jpg,jpeg,png,svg"/>
+            <column name="FILE_TYPE" value="pdf,csv,xlsx,doc,xls,pptx"/>
+            <column name="FILE_LIMIT" value="3"/>
+            <column name="FILE_SIZE" value="100"/>
+        </insert>
+
+        <insert tableName="SETTING">
+            <column name="ID" value="2"/>
+            <column name="CODE" value="CONTRACT"/>
+            <column name="IMAGE_TYPE" value="jpg,jpeg,png,svg"/>
+            <column name="FILE_TYPE" value="pdf,csv,xlsx,doc,xls,pptx"/>
+            <column name="FILE_LIMIT" value="3"/>
+            <column name="FILE_SIZE" value="100"/>
+        </insert>
+
+        <insert tableName="SETTING">
+            <column name="ID" value="3"/>
+            <column name="CODE" value="ACCOUNTING"/>
+            <column name="IMAGE_TYPE" value="jpg,jpeg,png,svg"/>
+            <column name="FILE_TYPE" value="pdf,csv,xlsx,doc,xls,pptx"/>
+            <column name="FILE_LIMIT" value="3"/>
+            <column name="FILE_SIZE" value="100"/>
+        </insert>
+
+        <insert tableName="SETTING">
+            <column name="ID" value="4"/>
+            <column name="CODE" value="NOTIFICATION"/>
+            <column name="IMAGE_TYPE" value="jpg,jpeg,png,svg"/>
+            <column name="FILE_TYPE" value="pdf,csv,xlsx,doc,xls,pptx"/>
+            <column name="FILE_LIMIT" value="3"/>
+            <column name="FILE_SIZE" value="100"/>
+        </insert>
+
+        <insert tableName="SETTING">
+            <column name="ID" value="5"/>
+            <column name="CODE" value="NOTIFICATION_COMMENT"/>
+            <column name="IMAGE_TYPE" value="jpg,jpeg,png,svg"/>
+            <column name="FILE_TYPE" value="pdf,csv,xlsx,doc,xls,pptx"/>
+            <column name="FILE_LIMIT" value="3"/>
+            <column name="FILE_SIZE" value="100"/>
+        </insert>
+
+        <insert tableName="SETTING">
+            <column name="ID" value="6"/>
+            <column name="CODE" value="TASK"/>
+            <column name="IMAGE_TYPE" value="jpg,jpeg,png,svg"/>
+            <column name="FILE_TYPE" value="pdf,csv,xlsx,doc,xls,pptx"/>
+            <column name="FILE_LIMIT" value="3"/>
+            <column name="FILE_SIZE" value="100"/>
+        </insert>
+
+        <insert tableName="SETTING">
+            <column name="ID" value="7"/>
+            <column name="CODE" value="TASK_COMMENT"/>
+            <column name="IMAGE_TYPE" value="jpg,jpeg,png,svg"/>
+            <column name="FILE_TYPE" value="pdf,csv,xlsx,doc,xls,pptx"/>
+            <column name="FILE_LIMIT" value="3"/>
+            <column name="FILE_SIZE" value="100"/>
+        </insert>
+
+        <insert tableName="SETTING">
+            <column name="ID" value="8"/>
+            <column name="CODE" value="BOOK"/>
+            <column name="IMAGE_TYPE" value="jpg,jpeg,png,svg"/>
+            <column name="FILE_TYPE" value="pdf,csv,xlsx,doc,xls,pptx"/>
+            <column name="FILE_LIMIT" value="3"/>
+            <column name="FILE_SIZE" value="100"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>

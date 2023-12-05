@@ -1,0 +1,166 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.webapp.erpapp.mapper.UserMapper">
+
+    <select id="getUserBirthday" resultMap="birthdayResultMap">
+        SELECT ID, FULLNAME, DATE_OF_BIRTH
+        FROM USER
+        WHERE MONTH(DATE_OF_BIRTH) IN (MONTH(#{prevMonth}), MONTH(#{monthly}), MONTH(#{nextMonth}))
+          AND status = 'ACTIVE'
+    </select>
+
+    <select id="getTodayBirthday" resultMap="birthdayResultMap">
+        SELECT ID,FULLNAME, DATE_OF_BIRTH
+        FROM USER
+        WHERE MONTH(DATE_OF_BIRTH) = MONTH(#{date}) AND DAY(DATE_OF_BIRTH) = DAY(#{date}) AND status = 'ACTIVE'
+    </select>
+
+    <select id="findByEmailAndStatus" parameterType="String" resultMap="userResultMap">
+        SELECT *
+        FROM USER
+        where email = #{email} AND status = #{status}
+    </select>
+
+    <select id="findByEmail" parameterType="com.webapp.erpapp.entity.User" resultMap="userResultMap">
+        SELECT *
+        FROM USER
+        where EMAIL = #{email}
+    </select>
+
+    <select id="findByTimesheetsCode" parameterType="String" resultMap="userResultMap">
+        SELECT *
+        FROM USER
+        WHERE TIMESHEETS_CODE = #{timesheetsCode}
+    </select>
+
+    <update id="updateUserDetail" parameterType="com.webapp.erpapp.entity.User">
+        UPDATE USER
+        SET
+            fullname = #{fullname},
+            date_of_birth = #{dateOfBirth},
+            phone = #{phone},
+            emergency_phone = #{emergencyPhone},
+            avatar = #{avatar},
+            type = #{type},
+            department = #{department},
+            atm = #{atm},
+            email = #{email},
+            password = #{password},
+            role = #{role},
+            position = #{position},
+            resume = #{resume},
+            address = #{address},
+            timesheets_code = #{timesheetsCode},
+            gender = #{gender}
+        WHERE id = #{id}
+    </update>
+
+    <select id="getAllUser" parameterType="org.apache.ibatis.session.RowBounds" resultMap="userResultMap">
+         <![CDATA[
+        SELECT u.fullname, u.id, u.email , u.department, u.position, u.CREATED_DATE
+        FROM USER AS u
+        WHERE u.status = #{status}
+          AND (u.email LIKE '%' #{searchTerm} '%' OR SUBSTRING_INDEX(u.fullname, ' ', -1) LIKE '%' #{searchTerm} '%')
+        ORDER BY SUBSTRING_INDEX(u.fullname, ' ', -1) ${sortDirection}
+        ]]>
+    </select>
+
+    <select id="getTotalUser" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM USER AS u
+        WHERE u.status = #{status}
+          AND (u.email LIKE '%' #{searchTerm} '%' OR SUBSTRING_INDEX(u.fullname, ' ', -1) LIKE '%' #{searchTerm} '%')
+        ORDER BY SUBSTRING_INDEX(u.fullname, ' ', -1) ${sortDirection}
+    </select>
+
+    <select id="findById" parameterType="String" resultMap="userResultMap">
+        SELECT u.*, c.id AS contract_id, c.*
+        FROM USER u
+        LEFT JOIN CONTRACT c ON u.id = c.user_id AND c.STATUS = 'ACTIVE'
+        WHERE u.id = #{id}
+    </select>
+
+    <update id="changeStatusUser" parameterType="String" >
+        UPDATE USER SET status = #{status} WHERE id = #{id}
+    </update>
+
+    <insert id="registerUser" parameterType="com.webapp.erpapp.entity.User">
+        INSERT INTO USER (ID, FULLNAME, STATUS, EMAIL, PASSWORD, CREATED_DATE) VALUES (#{id}, #{fullname}, #{status}, #{email}, #{password}, #{createdDate});
+    </insert>
+
+    <update id="activeUserRegister" parameterType="com.webapp.erpapp.entity.User">
+        UPDATE USER SET role = #{role} , status = #{status}, avatar = #{avatar} where id = #{id}
+    </update>
+
+    <delete id="deleteUser" parameterType="String">
+        DELETE from USER where id = #{id}
+    </delete>
+
+    <update id="updateUserProfile" parameterType="com.webapp.erpapp.entity.User">
+        UPDATE USER
+        SET
+            fullname = #{fullname},
+            date_of_birth = #{dateOfBirth},
+            phone = #{phone},
+            emergency_phone = #{emergencyPhone},
+            avatar = #{avatar},
+            address = #{address},
+            resume = #{resume},
+            timesheets_code = #{timesheetsCode},
+            gender = #{gender}
+        WHERE id = #{id};
+    </update>
+
+    <resultMap id="userResultMap" type="com.webapp.erpapp.entity.User">
+        <id property="id" column="id"/>
+        <result property="fullname" column="FULLNAME"/>
+        <result property="address" column="ADDRESS"/>
+        <result property="dateOfBirth" column="DATE_OF_BIRTH"/>
+        <result property="phone" column="PHONE"/>
+        <result property="emergencyPhone" column="EMERGENCY_PHONE"/>
+        <result property="avatar" column="AVATAR"/>
+        <result property="type" column="TYPE"/>
+        <result property="department" column="DEPARTMENT"/>
+        <result property="atm" column="ATM"/>
+        <result property="email" column="EMAIL"/>
+        <result property="password" column="PASSWORD"/>
+        <result property="role" column="ROLE"/>
+        <result property="status" column="STATUS"/>
+        <result property="position" column="POSITION"/>
+        <result property="resume" column="RESUME"/>
+        <result property="isFirstUpdateProfile" column="IS_FIRST_UPDATE_PROFILE"/>
+        <result property="timesheetsCode" column="TIMESHEETS_CODE"/>
+        <result property="createdDate" column="CREATED_DATE"/>
+        <result property="gender" column="GENDER"/>
+        <collection property="contracts" ofType="com.webapp.erpapp.entity.Contract" resultMap="listContractResultMap"/>
+    </resultMap>
+
+    <resultMap id="listContractResultMap" type="com.webapp.erpapp.entity.Contract" >
+        <id property="id" column="contract_id"/>
+        <result property="basicSalary" column="BASIC_SALARY"/>
+        <result property="allowance" column="ALLOWANCE"/>
+        <result property="contract" column="CONTRACT"/>
+        <result property="createdDate" column="CREATED_DATE"/>
+        <result property="insuranceType" column="INSURANCE_TYPE"/>
+        <result property="insuranceMoney" column="INSURANCE_MONEY"/>
+    </resultMap>
+
+    <select id="getAllFullname" resultType="map" resultMap="fullnameResultMap">
+        SELECT ID, FULLNAME, AVATAR, POSITION
+        FROM USER WHERE STATUS = 'ACTIVE';
+    </select>
+
+    <resultMap id="fullnameResultMap" type="java.util.Map">
+        <result property="id" column="ID"/>
+        <result property="fullname" column="FULLNAME"/>
+        <result property="avatar" column="AVATAR"/>
+        <result property="position" column="POSITION"/>
+    </resultMap>
+
+    <resultMap id="birthdayResultMap" type="com.webapp.erpapp.entity.User">
+        <result property="id" column="ID"/>
+        <result property="fullname" column="FULLNAME"/>
+        <result property="dateOfBirth" column="DATE_OF_BIRTH"/>
+    </resultMap>
+</mapper>

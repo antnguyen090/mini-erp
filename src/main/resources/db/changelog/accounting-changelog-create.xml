@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.0.xsd">
+
+    <!-- create table ACCOUNTING -->
+    <changeSet id="1" author="team2">
+        <createTable tableName="ACCOUNTING">
+            <column name="ID" type="VARCHAR(255)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="CREATED_DATE" type="DATETIME"/>
+            <column name="SPENDING" type="BIGINT"/>
+            <column name="REMAIN" type="BIGINT"/>
+            <column name="BILL" type="VARCHAR(255)"/>
+            <column name="USER_ID" type="VARCHAR(255)"/>
+            <column name="TITLE" type="VARCHAR(255)"/>
+            <column name="STATUS" type="VARCHAR(255)"/>
+            <column name="NOTE" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="2" author="team2">
+        <addColumn tableName="ACCOUNTING">
+            <column name="PAY_DATE" type="DATETIME"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="3" author="team2">
+        <modifyDataType tableName="ACCOUNTING" columnName="BILL" newDataType="TEXT"/>
+    </changeSet>
+
+</databaseChangeLog>

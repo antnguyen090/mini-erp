@@ -1,0 +1,279 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.webapp.erpapp.mapper.TaskMapper">
+
+    <select id="findAll" parameterType="org.apache.ibatis.session.RowBounds" resultMap="taskResultMap">
+        SELECT t.ID           AS task_id,
+               t.STATUS_TASK  AS task_status_task,
+               t.TITLE        AS task_title,
+               t.USER_ID      AS task_user_id,
+               t.CREATED_DATE AS task_created_date,
+               t.START_DATE   AS task_start_date,
+               t.DUE_DATE     AS task_due_date,
+               t.CLOSE_DATE   AS task_close_date,
+               t.PRIORITY     AS task_priority,
+               t.PROGRESS     AS task_progress,
+               t.STATUS       AS task_status,
+               t.CONTENT      AS task_content,
+               u.ID           AS user_id,
+               u.FULLNAME     AS user_fullname
+        FROM TASK t
+                 INNER JOIN USER u ON t.USER_ID = u.ID
+        WHERE t.STATUS = 'ACTIVE'
+          AND (#{statusTask} = '' OR t.STATUS_TASK = #{statusTask})
+          AND (
+                    u.FULLNAME LIKE CONCAT('%', #{search}, '%') OR
+                    t.CONTENT LIKE CONCAT('%#', #{search}, '%') OR
+                    t.TITLE LIKE CONCAT('%', #{search}, '%')
+            )
+        ORDER BY t.ID DESC
+    </select>
+
+    <select id="getTotalItem" resultType="long">
+        SELECT COUNT(*)
+        FROM TASK t
+        INNER JOIN USER u ON t.USER_ID = u.ID
+        WHERE t.STATUS = 'ACTIVE' AND (#{statusTask} = '' OR t.STATUS_TASK = #{statusTask})
+        AND (
+                u.FULLNAME LIKE CONCAT('%', #{search}, '%') OR
+                t.CONTENT LIKE CONCAT('%#', #{search}, '%') OR
+                t.TITLE LIKE CONCAT('%', #{search}, '%')
+        )
+    </select>
+
+    <resultMap id="taskResultMap" type="com.webapp.erpapp.entity.Task">
+        <id property="id" column="task_id"/>
+        <result property="statusTask" column="task_status_task"/>
+        <result property="title" column="task_title"/>
+        <result property="content" column="task_content"/>
+        <result property="createdDate" column="task_created_date"/>
+        <result property="startDate" column="task_start_date"/>
+        <result property="dueDate" column="task_due_date"/>
+        <result property="closeDate" column="task_close_date"/>
+        <result property="progress" column="task_progress"/>
+        <result property="priority" column="task_priority"/>
+        <result property="status" column="task_status"/>
+        <association property="user" column="user_id" javaType="com.webapp.erpapp.entity.User"
+                     resultMap="userResultMap">
+        </association>
+    </resultMap>
+
+    <resultMap id="userResultMap" type="com.webapp.erpapp.entity.User">
+        <id property="id" column="comment_user_id"/>
+        <result property="id" column="user_id"/>
+        <result property="fullname" column="user_fullname"/>
+        <result property="avatar" column="user_avatar"/>
+    </resultMap>
+
+    <insert id="registerTask" parameterType="com.webapp.erpapp.entity.Task">
+        INSERT
+        INTO TASK (ID, STATUS_TASK, TITLE, CONTENT, USER_ID, CREATED_DATE, DUE_DATE, PRIORITY, PROGRESS, STATUS)
+        VALUES (#{id}, #{statusTask}, #{title}, #{content}, #{user.id}, #{createdDate}, #{dueDate}, #{priority},
+                #{progress}, #{status});
+    </insert>
+
+    <update id="updateTask" parameterType="com.webapp.erpapp.entity.Task">
+        UPDATE TASK
+        SET TITLE       = #{title},
+            STATUS_TASK = #{statusTask},
+            PRIORITY    = #{priority},
+            CONTENT     = #{content},
+            PROGRESS    = #{progress},
+            START_DATE  = #{startDate},
+            CLOSE_DATE  = #{closeDate},
+            DUE_DATE    = #{dueDate},
+            USER_ID     = #{user.id}
+        WHERE ID = #{id};
+    </update>
+
+    <update id="changeStatusTask" parameterType="String">
+        UPDATE TASK
+        SET STATUS = #{status}
+        WHERE ID = #{id};
+    </update>
+
+    <update id="changeStatusTasks" parameterType="map">
+        UPDATE TASK
+        SET STATUS = #{status}
+        WHERE ID IN
+        <foreach collection="ids" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </update>
+
+    <select id="getStatusTaskCounts" resultType="map" resultMap="statusTaskCountResultMap">
+        SELECT all_statuses.status AS STATUS_TASK, COUNT(task.ID) as taskCount
+        FROM (SELECT 'REGISTERED' AS status
+              UNION ALL
+              SELECT 'OPENED'
+              UNION ALL
+              SELECT 'POSTPONED'
+              UNION ALL
+              SELECT 'REOPENED'
+              UNION ALL
+              SELECT 'CLOSED') AS all_statuses
+                 LEFT JOIN TASK AS task ON all_statuses.status = task.STATUS_TASK AND task.STATUS = 'ACTIVE'
+        GROUP BY all_statuses.status
+        UNION ALL
+        SELECT '' AS STATUS_TASK, COUNT(task.ID) as taskCount
+        FROM TASK task
+        WHERE STATUS = 'ACTIVE'
+    </select>
+
+    <resultMap id="statusTaskCountResultMap" type="java.util.Map">
+        <result property="statusTask" column="STATUS_TASK"/>
+        <result property="taskCount" column="taskCount"/>
+    </resultMap>
+
+    <select id="findById" resultMap="taskDetailResultMap">
+        SELECT t.ID            AS task_id,
+               t.STATUS_TASK   AS task_status_task,
+               t.TITLE         AS task_title,
+               t.USER_ID       AS task_user_id,
+               t.CREATED_DATE  AS task_created_date,
+               t.START_DATE    AS task_start_date,
+               t.DUE_DATE      AS task_due_date,
+               t.CLOSE_DATE    AS task_close_date,
+               t.PRIORITY      AS task_priority,
+               t.PROGRESS      AS task_progress,
+               t.STATUS        AS task_status,
+               t.CONTENT       AS task_content,
+               c.ID            AS comment_id,
+               c.USER_ID       AS comment_user_id,
+               c.TITLE         AS comment_title,
+               c.CONTENT       AS comment_content,
+               c.FILES         AS comment_files,
+               c.PARENT_ID     AS comment_parent_id,
+               c.CREATED_DATE  AS comment_created_date,
+               c.MODIFIED_DATE AS comment_modified_date,
+               c.MODIFIED_BY   AS comment_modified_by,
+               u.ID            AS user_id,
+               u.FULLNAME      AS user_fullname,
+               u.AVATAR        AS user_avatar
+        FROM TASK t
+                 LEFT JOIN COMMENT_TASK c ON t.ID = c.TASK_ID AND c.PARENT_ID IS NULL
+                 LEFT JOIN USER u ON t.USER_ID = u.ID
+        WHERE t.ID = #{id}
+    </select>
+
+    <resultMap id="taskDetailResultMap" type="com.webapp.erpapp.entity.Task">
+        <id property="id" column="task_id"/>
+        <result property="statusTask" column="task_status_task"/>
+        <result property="title" column="task_title"/>
+        <result property="content" column="task_content"/>
+        <result property="createdDate" column="task_created_date"/>
+        <result property="startDate" column="task_start_date"/>
+        <result property="dueDate" column="task_due_date"/>
+        <result property="closeDate" column="task_close_date"/>
+        <result property="progress" column="task_progress"/>
+        <result property="priority" column="task_priority"/>
+        <result property="status" column="task_status"/>
+        <association property="user" column="user_id" javaType="com.webapp.erpapp.entity.User"
+                     resultMap="userResultMap">
+        </association>
+        <collection property="comments" column="comment_id" ofType="com.webapp.erpapp.entity.CommentTask"
+                    resultMap="commentResultMap"/>
+    </resultMap>
+
+    <resultMap id="commentResultMap" type="com.webapp.erpapp.entity.CommentTask">
+        <id property="id" column="comment_id"/>
+        <result property="title" column="comment_title"/>
+        <result property="content" column="comment_content"/>
+        <result property="files" column="comment_files"/>
+        <result property="createdDate" column="comment_created_date"/>
+        <result property="modifiedDate" column="comment_modified_date"/>
+        <result property="modifiedBy" column="comment_modified_by"/>
+        <association property="parentComment" column="comment_parent_id"
+                     javaType="com.webapp.erpapp.entity.CommentTask" select="getParentComment"/>
+        <association property="user" column="comment_user_id" javaType="com.webapp.erpapp.entity.User"
+                     select="getUserId"/>
+        <collection property="childComments" column="comment_id"
+                    ofType="com.webapp.erpapp.entity.CommentTask" select="getChildComments"/>
+    </resultMap>
+
+    <select id="getChildComments" resultMap="commentResultMap">
+        SELECT c.id            AS comment_id,
+               c.user_id       AS comment_user_id,
+               c.title         AS comment_title,
+               c.content       AS comment_content,
+               c.files         AS comment_files,
+               c.created_date  AS comment_created_date,
+               c.parent_id     AS comment_parent_id,
+               c.created_date  AS comment_created_date,
+               c.modified_date AS comment_modified_date,
+               c.modified_by   AS comment_modified_by,
+               u.fullname      AS user_fullname,
+               u.avatar        AS user_avatar
+        FROM COMMENT_TASK c
+                 INNER JOIN USER u ON c.user_id = u.id
+        WHERE c.parent_id = #{id}
+    </select>
+
+    <select id="getParentComment" resultMap="parentCommentResultMap">
+        SELECT ID AS comment_parent_id
+        FROM COMMENT_TASK
+        WHERE ID = #{id}
+    </select>
+
+    <resultMap id="parentCommentResultMap" type="com.webapp.erpapp.entity.CommentTask">
+        <id property="id" column="comment_parent_id"/>
+        <result property="id" column="PARENT_ID"/>
+    </resultMap>
+
+    <select id="getUserId" resultMap="userResultMap">
+        SELECT u.ID       AS comment_user_id,
+               u.FULLNAME AS user_fullname,
+               u.AVATAR   AS user_avatar
+        FROM USER u
+        WHERE u.ID = #{id}
+    </select>
+
+    <select id="getTaskByHashtag" resultType="map" resultMap="TaskByHashTagResultMap">
+        SELECT t.ID, t.TITLE
+        FROM TASK t
+                 INNER JOIN USER u ON t.USER_ID = u.ID
+        WHERE t.STATUS = 'ACTIVE' AND u.ID = #{userId} AND t.CONTENT LIKE CONCAT('%#', #{hashtag}, '%')
+    </select>
+
+    <resultMap id="TaskByHashTagResultMap" type="java.util.Map">
+        <result property="id" column="id"/>
+        <result property="title" column="title"/>
+    </resultMap>
+
+    <select id="getOpenedTask" resultMap="taskResultMap">
+        SELECT t.ID           AS task_id,
+               t.STATUS_TASK  AS task_status_task,
+               t.TITLE        AS task_title,
+               t.USER_ID      AS task_user_id,
+               t.CREATED_DATE AS task_created_date,
+               t.START_DATE   AS task_start_date,
+               t.DUE_DATE     AS task_due_date,
+               t.CLOSE_DATE   AS task_close_date,
+               t.PRIORITY     AS task_priority,
+               t.PROGRESS     AS task_progress,
+               t.STATUS       AS task_status,
+               t.CONTENT      AS task_content,
+               u.ID           AS user_id,
+               u.FULLNAME     AS user_fullname
+        FROM TASK t
+                 INNER JOIN USER u ON t.USER_ID = u.ID
+        WHERE t.STATUS = 'ACTIVE' AND u.ID = #{userId}
+          AND  t.STATUS_TASK in ('OPENED','REOPENED')
+        ORDER BY t.CREATED_DATE ASC
+    </select>
+
+    <select id="getOpenedStatusTaskCounts" resultType="map" resultMap="statusTaskCountResultMap">
+        SELECT all_statuses.status AS STATUS_TASK, COUNT(task.id) as taskCount
+        FROM (SELECT 'OPENED' AS status
+              UNION ALL
+              SELECT 'REOPENED') AS all_statuses
+                 LEFT JOIN TASK AS task ON all_statuses.status = task.STATUS_TASK AND task.STATUS = 'ACTIVE'
+        WHERE task.user_id = #{userId}
+        GROUP BY all_statuses.status
+        UNION ALL
+        SELECT '' AS STATUS_TASK, COUNT(id) as taskCount
+        FROM TASK
+        WHERE STATUS = 'ACTIVE' AND user_id = #{userId}
+    </select>
+</mapper>

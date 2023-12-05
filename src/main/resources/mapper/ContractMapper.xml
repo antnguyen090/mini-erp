@@ -1,0 +1,99 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.webapp.erpapp.mapper.ContractMapper">
+
+    <insert id="addContract" parameterType="com.webapp.erpapp.entity.Contract">
+        insert into CONTRACT (id, basic_salary, allowance, contract, created_date, user_id, insurance, status, HISTORY_ID)
+            value (#{id}, #{basicSalary}, #{allowance}, #{contract}, #{createdDate}, #{user.id}, #{insurance}, #{status}, #{parentContract.id})
+    </insert>
+
+    <select id="findById" resultMap="contractResultMap">
+        SELECT
+            c.ID           AS contract_id,
+            c.ALLOWANCE AS contract_allowance,
+            c.BASIC_SALARY AS contract_basic_salary,
+            c.CONTRACT AS contract_contractFile,
+            c.CREATED_DATE AS contract_created_date,
+            c.STATUS AS contract_status,
+            c.INSURANCE AS contract_insurance,
+            c.HISTORY_ID AS contract_history_id,
+            c.USER_ID AS contract_user_id,
+            u.fullname AS user_fullname
+        FROM CONTRACT c
+                 LEFT JOIN USER u ON c.user_id = u.id AND c.HISTORY_ID IS NOT NULL
+        WHERE c.id = #{id}
+    </select>
+
+    <select id="getContractByUser" parameterType="String" resultMap="contractResultMap">
+
+        SELECT  c.ID           AS contract_id,
+                c.ALLOWANCE AS contract_allowance,
+                c.BASIC_SALARY AS contract_basic_salary,
+                c.CONTRACT AS contract_contractFile,
+                c.CREATED_DATE AS contract_created_date,
+                c.STATUS AS contract_status,
+                c.INSURANCE AS contract_insurance,
+                c.HISTORY_ID AS contract_history_id,
+                c.USER_ID AS contract_user_id,
+                u.fullname AS user_fullname
+        FROM CONTRACT c
+                 INNER JOIN USER u ON c.user_id = u.id
+        WHERE u.id = #{userId}
+          AND c.status = 'ACTIVE'
+          AND c.HISTORY_ID IS NULL
+    </select>
+
+    <update id="updateContract" parameterType="com.webapp.erpapp.entity.Contract">
+        UPDATE CONTRACT
+        SET basic_salary    = #{basicSalary},
+            allowance       = #{allowance},
+            contract        = #{contract},
+            insurance  = #{insurance}
+        WHERE id = #{id};
+    </update>
+
+    <update id="changeStatusContract" parameterType="String">
+        SET SQL_SAFE_UPDATES = 0;
+        UPDATE CONTRACT c
+        SET status = #{status}
+        WHERE id = #{id} or c.history_id = #{id};
+        SET SQL_SAFE_UPDATES = 1;
+    </update>
+
+    <resultMap id="contractResultMap" type="com.webapp.erpapp.entity.Contract">
+        <id property="id" column="contract_id"/>
+        <result property="basicSalary" column="contract_basic_salary"/>
+        <result property="allowance" column="contract_allowance"/>
+        <result property="contract" column="contract_contractFile"/>
+        <result property="createdDate" column="contract_created_date"/>
+        <result property="status" column="contract_status"/>
+        <result property="insurance" column="contract_insurance"/>
+        <association property="user" column="contract_user_id" javaType="com.webapp.erpapp.entity.User" resultMap="userResultMap"/>
+        <collection property="historyContract" column="contract_id" ofType="com.webapp.erpapp.entity.Contract"
+                    select="getHistoryContract"/>
+    </resultMap>
+
+    <resultMap id="userResultMap" type="com.webapp.erpapp.entity.User">
+        <id property="id" column="contract_user_id" />
+        <result property="fullname" column="user_fullname" />
+    </resultMap>
+
+    <select id="getHistoryContract" resultMap="contractResultMap">
+        SELECT
+            c.ID           AS contract_id,
+            c.ALLOWANCE AS contract_allowance,
+            c.BASIC_SALARY AS contract_basic_salary,
+            c.CONTRACT AS contract_contractFile,
+            c.CREATED_DATE AS contract_created_date,
+            c.STATUS AS contract_status,
+            c.INSURANCE AS contract_insurance,
+            c.HISTORY_ID AS contract_history_id,
+            c.USER_ID AS contract_user_id,
+            u.fullname AS user_fullname
+        FROM CONTRACT c
+                 INNER JOIN USER u ON c.user_id = u.id
+        WHERE c.HISTORY_ID = #{id}
+    </select>
+
+</mapper>

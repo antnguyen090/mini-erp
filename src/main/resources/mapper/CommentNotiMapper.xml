@@ -1,0 +1,70 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.webapp.erpapp.mapper.CommentNotificationMapper">
+
+    <insert id="createCommentNotification" parameterType="com.webapp.erpapp.entity.CommentNotification" >
+        INSERT
+        INTO COMMENT_NOTIFICATION (CREATED_DATE, CONTENT, ID, NOTIFICATION_ID, USER_ID, PARENT_ID)
+        VALUES (#{createdDate}, #{content}, #{id},#{notification.id}, #{user.id}, #{parentComment.id});
+    </insert>
+
+    <update id="updateCommentNotification" parameterType="com.webapp.erpapp.entity.CommentNotification">
+        UPDATE COMMENT_NOTIFICATION
+        SET
+            CONTENT = #{content},
+            MODIFIED_BY = #{modifiedBy},
+            MODIFIED_DATE = NOW()
+        WHERE ID = #{id}
+    </update>
+
+    <delete id="deleteById" parameterType="java.lang.String">
+          DELETE FROM COMMENT_NOTIFICATION WHERE ID = #{id}
+    </delete>
+
+    <select id="findById" resultMap="commentNotificationResultMap">
+        SELECT
+            c.ID AS comment_id,
+            c.USER_ID AS comment_user_id,
+            c.CONTENT AS comment_content,
+            c.PARENT_ID AS comment_parent_id,
+            c.CREATED_DATE AS comment_created_date,
+            c.MODIFIED_DATE AS comment_modified_date,
+            c.MODIFIED_BY AS comment_modified_by,
+            u.FULLNAME AS user_fullname,
+            u.AVATAR AS user_avatar
+        FROM COMMENT_NOTIFICATION c LEFT JOIN USER u ON c.USER_ID = u.ID AND c.PARENT_ID IS NOT NULL
+        WHERE c.ID = #{id}
+    </select>
+
+    <resultMap id="commentNotificationResultMap" type="com.webapp.erpapp.entity.CommentNotification">
+        <id property="id" column="comment_id" />
+        <result property="content" column="comment_content" />
+        <result property="createdDate" column="comment_created_date" />
+        <result property="modifiedDate" column="comment_modified_date" />
+        <result property="modifiedBy" column="comment_modified_by" />
+        <association property="user" column="comment_user_id" javaType="com.webapp.erpapp.entity.User" resultMap="userResultMap"/>
+        <collection property="childComments" column="comment_id" ofType="com.webapp.erpapp.entity.CommentNotification" select="getChildComments" />
+    </resultMap>
+
+    <resultMap id="userResultMap" type="com.webapp.erpapp.entity.User">
+        <id property="id" column="id" />
+        <result property="fullname" column="user_fullname" />
+        <result property="avatar" column="user_avatar" />
+    </resultMap>
+
+    <select id="getChildComments" resultMap="commentNotificationResultMap">
+        SELECT c.ID AS comment_id,
+               c.USER_ID AS comment_user_id,
+               c.CONTENT AS comment_content,
+               c.CREATED_DATE AS comment_created_date,
+               c.PARENT_ID AS comment_parent_id,
+               c.MODIFIED_DATE AS comment_modified_date,
+               c.MODIFIED_BY AS comment_modified_by,
+               u.FULLNAME AS user_fullname,
+               u.AVATAR AS user_avatar
+        FROM COMMENT_NOTIFICATION c
+                 INNER JOIN USER u ON c.USER_ID = u.ID
+        WHERE c.PARENT_ID = #{id}
+    </select>
+</mapper>

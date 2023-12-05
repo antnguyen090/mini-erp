@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.0.xsd">
+
+    <!-- create table MANAGEMENT_TIME_DAY -->
+    <changeSet id="1" author="team2">
+        <createTable tableName="MANAGEMENT_TIME_DAY">
+            <column name="ID" type="VARCHAR(255)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="ONE_THING_CALENDAR" type="TEXT"/>
+            <column name="TO_DO_LIST" type="TEXT"/>
+            <column name="GRATITUDE_DIARY" type="TEXT"/>
+            <column name="AFFIRMATION" type="TEXT"/>
+            <column name="DAY" type="DATE"/>
+            <column name="USER_ID" type="VARCHAR(255)"/>
+            <column name="WEEKLY_CODE" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+</databaseChangeLog>

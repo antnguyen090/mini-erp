@@ -1,0 +1,72 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.webapp.erpapp.mapper.FeelingOfBookMapper">
+
+    <select id="findAll" parameterType="com.webapp.erpapp.entity.FeelingOfBook" resultMap="feelingOfBookResultMap">
+        SELECT *
+        FROM FEELING_OF_BOOK f
+        INNER JOIN USER u ON f.USER_ID = u.ID
+        INNER JOIN BOOK b ON f.BOOK_ID = b.ID
+    </select>
+
+    <update id="updateFeelingOfBook" parameterType="com.webapp.erpapp.entity.FeelingOfBook">
+        UPDATE FEELING_OF_BOOK
+        SET QUOTE = #{quote}
+        WHERE ID = #{id}
+    </update>
+
+    <select id="findById" resultMap="feelingOfBookResultMap">
+        SELECT *
+        FROM FEELING_OF_BOOK f INNER JOIN USER u ON f.USER_ID = u.ID
+        WHERE f.ID = #{id}
+    </select>
+
+    <resultMap id="feelingOfBookResultMap" type="com.webapp.erpapp.entity.FeelingOfBook">
+        <id property="id" column="id"/>
+        <result property="quote" column="QUOTE"/>
+        <result property="createdDate" column="CREATED_DATE"/>
+        <association property="user" column="USER_ID" javaType="com.webapp.erpapp.entity.User" resultMap="userResultMap"></association>
+    </resultMap>
+
+    <resultMap id="userResultMap" type="com.webapp.erpapp.entity.User">
+        <id property="id" column="USER_ID" />
+        <result property="id" column="USER_ID" />
+        <result property="fullname" column="FULLNAME" />
+        <result property="avatar" column="AVATAR" />
+    </resultMap>
+
+    <insert id="createFeelingOfBook" parameterType="com.webapp.erpapp.entity.FeelingOfBook">
+        INSERT
+        INTO FEELING_OF_BOOK (ID, USER_ID, QUOTE, CREATED_DATE, BOOK_ID)
+        VALUES (#{id}, #{user.id}, #{quote}, #{createdDate}, #{book.id})
+    </insert>
+
+    <delete id="deleteFeelingOfBook" parameterType="String">
+        DELETE
+        FROM FEELING_OF_BOOK
+        WHERE USER_ID = #{userId} AND BOOK_ID = #{bookId}
+    </delete>
+
+    <select id="findAllByBook" parameterType="com.webapp.erpapp.entity.FeelingOfBook" resultMap="feelingOfBookDetailResultMap">
+        SELECT *
+        FROM FEELING_OF_BOOK f
+                 INNER JOIN USER u ON f.USER_ID = u.ID
+                 INNER JOIN BOOK b ON f.BOOK_ID = b.ID
+        WHERE b.ID = #{id}
+    </select>
+
+    <select id="findFeelingByUser" parameterType="String" resultMap="feelingOfBookDetailResultMap">
+        SELECT fb.*
+        FROM FEELING_OF_BOOK AS fb
+        where fb.book_id = #{bookId}
+        and fb.user_id = #{userId};
+    </select>
+
+    <resultMap id="feelingOfBookDetailResultMap" type="com.webapp.erpapp.entity.FeelingOfBook">
+        <id property="id" column="id"/>
+        <result property="quote" column="QUOTE"/>
+        <result property="createdDate" column="CREATED_DATE"/>
+        <association property="user" column="USER_ID" javaType="com.webapp.erpapp.entity.User" resultMap="userResultMap"></association>
+    </resultMap>
+</mapper>

@@ -1,0 +1,39 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.webapp.erpapp.mapper.ManagementTimeDayDetailMapper">
+    <insert id="createTimeDayDetail" parameterType="com.webapp.erpapp.entity.ManagementTimeDayDetail">
+        insert into MANAGEMENT_TIME_DAY_DETAIL (ID, MANAGEMENT_TIME_DAY_ID, SIX_TO_TWELVE_PM, TWELVE_TO_SIX_PM,
+                                                SIX_TO_TWELVE_AM)
+            value (#{id}, #{managementTimeDay.id}, #{sixToTwelvePM}, #{twelveToSixPM}, #{sixToTwelveAM})
+    </insert>
+
+    <update id="updateTimeDayDetail" parameterType="com.webapp.erpapp.entity.ManagementTimeDayDetail">
+        UPDATE MANAGEMENT_TIME_DAY_DETAIL
+        SET
+            SIX_TO_TWELVE_PM = #{sixToTwelvePM},
+            TWELVE_TO_SIX_PM = #{twelveToSixPM},
+            SIX_TO_TWELVE_AM = #{sixToTwelveAM}
+        WHERE MANAGEMENT_TIME_DAY_ID = #{managementTimeDay.id}
+    </update>
+
+    <select id="findByManagementTimeDayId" resultMap="dayDetailResultMap">
+        SELECT mtdd.*, mtd.*
+        FROM MANAGEMENT_TIME_DAY_DETAIL mtdd INNER JOIN MANAGEMENT_TIME_DAY mtd ON mtdd.MANAGEMENT_TIME_DAY_ID = mtd.ID
+        WHERE mtdd.MANAGEMENT_TIME_DAY_ID = #{dayId}
+    </select>
+
+    <resultMap id="dayDetailResultMap" type="com.webapp.erpapp.entity.ManagementTimeDayDetail">
+        <id property="id" column="ID"/>
+        <result property="sixToTwelvePM" column="SIX_TO_TWELVE_PM"/>
+        <result property="twelveToSixPM" column="TWELVE_TO_SIX_PM"/>
+        <result property="sixToTwelveAM" column="SIX_TO_TWELVE_AM"/>
+        <association property="managementTimeDay" column="MANAGEMENT_TIME_DAY_ID" javaType="com.webapp.erpapp.entity.ManagementTimeDay" resultMap="managementTimeDayResultMap">
+        </association>
+    </resultMap>
+
+    <resultMap id="managementTimeDayResultMap" type="com.webapp.erpapp.entity.ManagementTimeDay">
+        <id property="id" column="MANAGEMENT_TIME_DAY_ID" />
+        <result property="id" column="MANAGEMENT_TIME_DAY_ID" />
+    </resultMap>
+</mapper>

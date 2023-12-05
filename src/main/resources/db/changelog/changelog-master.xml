@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+           http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.10.xsd">
+
+    <include file="db/changelog/user-changelog-create.xml" />
+    <include file="db/changelog/contract-changelog-create.xml" />
+    <include file="db/changelog/timesheets-changelog-create.xml" />
+    <include file="db/changelog/accounting-changelog-create.xml" />
+    <include file="db/changelog/notification-changelog-create.xml" />
+    <include file="db/changelog/comment_notification-changelog-create.xml" />
+    <include file="db/changelog/task-changelog-create.xml" />
+    <include file="db/changelog/comment_task-changelog-create.xml" />
+    <include file="db/changelog/weekly-report-changelog-create.xml" />
+    <include file="db/changelog/setting-changelog-create.xml" />
+    <include file="db/changelog/management-time-day-changelog-create.xml" />
+    <include file="db/changelog/management-time-day-detail-changelog-create.xml" />
+    <include file="db/changelog/book-changelog-create.xml" />
+    <include file="db/changelog/feeling-of-book-changelog-create.xml" />
+    <include file="db/changelog/weekly-management-time-day-changelog-create.xml" />
+    <include file="db/changelog/event-changelog-create.xml"/>
+    <include file="db/changelog/subscribe-changelog-create.xml"/>
+    <include file="db/changelog/changelog-add-constraint.xml" />
+
+    <include file="db/changelog/add-data-changelog-create.xml" />
+
+
+
+</databaseChangeLog>

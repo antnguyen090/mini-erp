@@ -1,0 +1,46 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.webapp.erpapp.mapper.TimesheetsMapper">
+
+    <select id="findAllByUserAndMonthYear" parameterType="com.webapp.erpapp.entity.Timesheets" resultMap="timesheetsResultMap">
+        SELECT t.*
+        FROM TIMESHEETS t
+        INNER JOIN USER u ON t.TIMESHEETS_CODE = u.TIMESHEETS_CODE
+        WHERE u.ID = #{userId} AND YEAR(t.WORK_DATE) = #{year} AND MONTH(t.WORK_DATE) = #{month}
+    </select>
+
+    <select id="totalWorkingDateByYear" parameterType="String" resultType="java.util.Map">
+        SELECT YEAR(t.WORK_DATE) AS year, COUNT(*) AS workdays
+        FROM TIMESHEETS t
+        INNER JOIN USER u ON t.TIMESHEETS_CODE = u.TIMESHEETS_CODE
+        WHERE u.ID = #{userID}
+        GROUP BY year
+        ORDER BY year ASC;
+    </select>
+
+    <select id="totalWorkingDateByMonth" parameterType="String" resultType="java.util.Map">
+        SELECT MONTH(t.WORK_DATE) AS month, COUNT(*) AS workdays
+        FROM TIMESHEETS t
+        INNER JOIN USER u ON t.TIMESHEETS_CODE = u.TIMESHEETS_CODE
+        WHERE u.ID = #{userID} AND YEAR(t.WORK_DATE) = #{year}
+        GROUP BY month
+        ORDER BY month ASC;
+    </select>
+
+    <resultMap id="timesheetsResultMap" type="com.webapp.erpapp.entity.Timesheets">
+        <id property="id" column="ID"/>
+        <result property="content" column="CONTENT"/>
+        <result property="workDate" column="WORK_DATE"/>
+        <result property="timesheetsCode" column="TIMESHEETS_CODE"/>
+    </resultMap>
+
+    <insert id="insertTimesheetsBatch" parameterType="java.util.List" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO TIMESHEETS (ID, WORK_DATE, CONTENT, TIMESHEETS_CODE)
+        VALUES
+        <foreach collection="list" item="timesheet" separator=",">
+            (UUID(), #{timesheet.workDate}, #{timesheet.content}, #{timesheet.timesheetsCode})
+        </foreach>
+    </insert>
+
+</mapper>

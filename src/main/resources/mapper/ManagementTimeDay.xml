@@ -1,0 +1,56 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.webapp.erpapp.mapper.ManagementTimeDayMapper">
+
+    <insert id="createDayInfo" parameterType="com.webapp.erpapp.entity.ManagementTimeDay">
+        INSERT INTO MANAGEMENT_TIME_DAY (ID, ONE_THING_CALENDAR, TO_DO_LIST, GRATITUDE_DIARY, AFFIRMATION, DAY, USER_ID, WEEKLY_CODE)
+        VALUES (#{id}, #{oneThingCalendar}, #{toDoList}, #{gratitudeDiary}, #{affirmation}, #{day}, #{user.id}, #{weeklyCode})
+    </insert>
+
+    <select id="findById" resultMap="dayResultMap">
+        SELECT *,u.fullname
+        FROM MANAGEMENT_TIME_DAY m
+                 INNER JOIN USER u ON m.user_id = u.id
+        WHERE m.ID = #{id}
+    </select>
+
+    <select id="findByDay" resultMap="dayResultMap">
+        SELECT *
+        FROM MANAGEMENT_TIME_DAY m
+                 INNER JOIN USER u ON m.user_id = u.id
+        WHERE m.USER_ID = #{userId} AND m.DAY = #{day}
+    </select>
+
+    <resultMap id="dayResultMap" type="com.webapp.erpapp.entity.ManagementTimeDay">
+        <id property="id" column="ID"/>
+        <result property="oneThingCalendar" column="ONE_THING_CALENDAR"/>
+        <result property="toDoList" column="TO_DO_LIST"/>
+        <result property="gratitudeDiary" column="GRATITUDE_DIARY"/>
+        <result property="affirmation" column="AFFIRMATION"/>
+        <result property="day" column="DAY"/>
+        <result property="weeklyCode" column="WEEKLY_CODE"/>
+        <association property="user" column="USER_ID" javaType="com.webapp.erpapp.entity.User" resultMap="userResultMap">
+        </association>
+    </resultMap>
+
+    <resultMap id="userResultMap" type="com.webapp.erpapp.entity.User">
+        <id property="id" column="user_id" />
+        <result property="fullname" column="fullname" />
+    </resultMap>
+
+    <update id="updateDayInfo" parameterType="com.webapp.erpapp.entity.ManagementTimeDay">
+        UPDATE MANAGEMENT_TIME_DAY SET
+        ONE_THING_CALENDAR = #{oneThingCalendar},
+        TO_DO_LIST = #{toDoList},
+        GRATITUDE_DIARY = #{gratitudeDiary},
+        AFFIRMATION = #{affirmation}
+        WHERE ID = #{id};
+    </update>
+
+    <select id="findAllByMonthYear" resultMap="dayResultMap">
+        SELECT *
+        FROM MANAGEMENT_TIME_DAY
+        WHERE USER_ID = #{userId} AND DAY between #{startDate} AND #{endDate}
+    </select>
+</mapper>

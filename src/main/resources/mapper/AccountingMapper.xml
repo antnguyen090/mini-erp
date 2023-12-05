@@ -1,0 +1,199 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.webapp.erpapp.mapper.AccountingMapper">
+    <select id="findAllMonthlyHistory" resultMap="MonthYearFormatResultMap">
+        SELECT DISTINCT YEAR(pay_date) AS year, DATE_FORMAT(pay_date, '%m') AS month_list
+        FROM ACCOUNTING
+        WHERE status = 'ACTIVE'
+        ORDER BY year DESC, month_list DESC
+    </select>
+
+    <select id="getRemainBalanceEachMonth" resultType="com.webapp.erpapp.model.response.accounting.RemainBalanceEachMonth">
+        SELECT DATE_FORMAT(ranked.pay_date, '%Y-%m') AS yearMonth, remain
+        FROM (
+                 SELECT *,
+                        ROW_NUMBER() OVER (PARTITION BY DATE_FORMAT(pay_date, '%Y-%m') ORDER BY pay_date DESC) AS row_num
+                 FROM ACCOUNTING
+                 WHERE status = 'ACTIVE'
+             ) AS ranked
+        WHERE row_num = 1
+        ORDER BY yearMonth ASC
+    </select>
+
+    <resultMap id="MonthYearFormatResultMap" type="com.webapp.erpapp.model.response.accounting.MonthYearFormat">
+        <id property="year" column="year" />
+        <collection property="month" ofType="java.lang.String">
+            <result column="month_list" />
+        </collection>
+    </resultMap>
+
+    <select id="getTotalRecordCountPerMonth" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM ACCOUNTING
+        WHERE status ='ACTIVE'
+        <choose>
+            <when test="startDate != null and endDate != null">
+                <if test="startDate != null">
+                    AND pay_date &gt;= #{startDate}
+                </if>
+                AND pay_date &lt;= #{endDate}
+            </when>
+            <when test="startDate != null and endDate == null">
+                AND pay_date &gt;= #{startDate}
+            </when>
+            <when test="endDate != null and startDate == null">
+                AND pay_date &lt;= #{endDate}
+            </when>
+        </choose>
+    </select>
+
+    <insert id="createAccounting" parameterType="com.webapp.erpapp.entity.Accounting">
+        INSERT
+        INTO ACCOUNTING (id,pay_date,spending,remain, user_id, bill, title, status, note,created_date)
+        VALUES (#{id}, #{payDate},#{expense}, #{remain},#{user.id}, #{bill}, #{title}, #{status}, #{note}, now());
+    </insert>
+
+    <update id="updateAccounting" parameterType="com.webapp.erpapp.entity.Accounting">
+        UPDATE ACCOUNTING
+        SET spending = #{expense},
+        user_id = #{user.id},
+        bill = #{bill},
+        title = #{title},
+        note = #{note},
+        pay_date = #{payDate}
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateRecordsBatch" parameterType="java.util.List">
+        <foreach collection="list" item="record" separator=";" >
+            UPDATE ACCOUNTING
+            SET
+            spending = #{record.expense},
+            remain = #{record.remain}
+            WHERE id = #{record.id}
+        </foreach>
+    </update>
+
+    <select id="getRemainRecordInMonth" parameterType="com.webapp.erpapp.entity.Accounting" resultMap="remainAccountingResultMap">
+        SELECT spending, remain, id
+        FROM ACCOUNTING
+        WHERE
+        <if test="inMonth == true">
+            pay_date &gt;= #{currentAccounting.payDate}
+            AND pay_date &lt;= CONCAT(LAST_DAY(#{currentAccounting.payDate}), ' 23:59:59')
+        </if>
+        <if test="inMonth == false">
+            pay_date &gt;= LAST_DAY(#{currentAccounting.payDate} - INTERVAL 1 MONTH) + INTERVAL 1 DAY
+            AND pay_date &lt;= LAST_DAY(#{currentAccounting.payDate})
+        </if>
+          AND status ='ACTIVE'
+        ORDER BY pay_date ASC
+    </select>
+
+    <select id="findBeforeCurrentAccounting" resultMap="accountingResultMap">
+        SELECT spending, remain, pay_date
+        FROM ACCOUNTING
+        WHERE pay_date &lt; #{payDate}
+        AND pay_date &gt;= DATE_FORMAT(#{payDate}, '%Y-%m-01 00:00:00')
+        AND pay_date &lt;= CONCAT(LAST_DAY(#{payDate}), ' 23:59:59')
+        AND status = 'ACTIVE'
+        ORDER BY pay_date DESC
+        LIMIT 1;
+    </select>
+
+    <select id="findAccountingByMonth" parameterType="org.apache.ibatis.session.RowBounds" resultMap="accountingResultMap" >
+        SELECT a.*, u.fullname
+        FROM ACCOUNTING a
+        INNER JOIN
+        USER u
+        ON a.user_id = u.id
+        WHERE a.status ='ACTIVE'
+        <choose>
+              <when test="startDate != null and endDate != null">
+                  <if test="startDate != null">
+                      AND a.pay_date &gt;= #{startDate}
+                  </if>
+                  AND a.pay_date &lt;= #{endDate}
+              </when>
+              <when test="startDate != null and endDate == null">
+                  AND a.pay_date &gt;= #{startDate}
+              </when>
+              <when test="endDate != null and startDate == null">
+                  AND a.pay_date &lt;= #{endDate}
+              </when>
+        </choose>
+        ORDER BY a.pay_date ASC
+    </select>
+
+    <select id="getTotalSpending" resultMap="totalSpendingResultMap">
+        SELECT SUM(CASE WHEN spending &gt; 0 THEN spending ELSE 0 END) AS totalRevenue,
+               SUM(CASE WHEN spending &lt; 0 THEN spending ELSE 0 END) AS totalExpense
+        FROM ACCOUNTING
+        WHERE status ='ACTIVE'
+        <choose>
+                <when test="startDate != null and endDate != null">
+                    <if test="startDate != null">
+                        AND pay_date &gt;= #{startDate}
+                    </if>
+                    AND pay_date &lt;= #{endDate}
+                </when>
+                <when test="startDate != null and endDate == null">
+                    AND pay_date &gt;= #{startDate}
+                </when>
+                <when test="endDate != null and startDate == null">
+                    AND pay_date &lt;= #{endDate}
+                </when>
+        </choose>
+    </select>
+
+    <select id="getLatestRemain" resultType="java.lang.Long">
+        SELECT remain
+        FROM ACCOUNTING
+        WHERE pay_date &lt;= #{endDate} AND status ='ACTIVE'
+        ORDER BY pay_date DESC
+            LIMIT 1;
+    </select>
+
+    <select id="findAccountingById" parameterType="String" resultMap="accountingResultMap">
+        SELECT a.*, u.fullname
+        FROM ACCOUNTING a INNER JOIN USER u on a.user_id = u.id
+        WHERE a.id = #{id} AND a.status ='ACTIVE'
+    </select>
+
+    <update id="deleteAccounting" parameterType="String">
+        UPDATE ACCOUNTING
+        SET status = 'DISABLE'
+        WHERE id =#{id}
+    </update>
+
+    <resultMap id="accountingResultMap" type="com.webapp.erpapp.entity.Accounting">
+        <id property="id" column="id"/>
+        <result property="createdDate" column="created_date"/>
+        <result property="expense" column="spending"/>
+        <result property="remain" column="remain"/>
+        <result property="bill" column="bill"/>
+        <result property="title" column="title"/>
+        <result property="status" column="status"/>
+        <result property="note" column="note"/>
+        <result property="payDate" column="pay_date"/>
+        <association property="user" column="user_id" javaType="com.webapp.erpapp.entity.User" resultMap="userResultMap">
+        </association>
+    </resultMap>
+
+    <resultMap id="remainAccountingResultMap" type="com.webapp.erpapp.entity.Accounting">
+        <id property="id" column="id"/>
+        <result property="expense" column="spending"/>
+        <result property="remain" column="remain"/>
+    </resultMap>
+
+    <resultMap id="userResultMap" type="com.webapp.erpapp.entity.User">
+        <id property="id" column="user_id" />
+        <result property="fullname" column="fullname" />
+    </resultMap>
+
+    <resultMap id="totalSpendingResultMap" type="com.webapp.erpapp.model.response.accounting.TotalSpendAndRemain">
+        <result column="totalExpense" property="totalExpense"/>
+        <result column="totalRevenue" property="totalRevenue"/>
+    </resultMap>
+</mapper>

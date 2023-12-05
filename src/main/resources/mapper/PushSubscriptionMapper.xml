@@ -1,0 +1,21 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.webapp.erpapp.mapper.PushSubscriptionMapper">
+    <!--    Create new subscribe-->
+    <insert id="createPushSubscription" parameterType="com.webapp.erpapp.entity.PushSubscription">
+        INSERT INTO SUBSCRIBE (ID, ENDPOINT, P256DH, AUTH, USER_ID)
+        VALUES (#{id}, #{endpoint}, #{p256dh}, #{auth}, #{user.id})
+    </insert>
+
+    <!--    Find all subscribe-->
+    <select id="findAll" parameterType="String" resultType="com.webapp.erpapp.entity.PushSubscription">
+        SELECT *
+        FROM SUBSCRIBE
+        WHERE USER_ID != #{id}
+    </select>
+
+    <delete id="deletePushSubscription" parameterType="String">
+        DELETE from SUBSCRIBE where ENDPOINT = #{endpoint}
+    </delete>
+</mapper>

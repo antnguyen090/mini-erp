@@ -1,0 +1,178 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.webapp.erpapp.mapper.NotificationMapper">
+
+    <!--    Get All Notification-->
+    <select id="getAllNoti" parameterType="com.webapp.erpapp.entity.Notification" resultMap="notiListShowResultMap">
+        <![CDATA[
+        SELECT n.*,u.ID,u.FULLNAME
+        FROM NOTIFICATION n
+                 LEFT JOIN USER u ON n.USER_ID = u.ID
+        WHERE (n.TITLE LIKE '%' #{search} '%' OR u.FULLNAME LIKE '%' #{search} '%') AND n.STATUS = #{status}
+        ORDER BY CREATED_DATE DESC
+            LIMIT #{start}, #{pageSize}
+        ]]>
+    </select>
+
+    <select id="getInactiveNoti" parameterType="com.webapp.erpapp.entity.Notification" resultMap="notiListShowResultMap">
+        <![CDATA[
+        SELECT n.*,u.ID,u.FULLNAME
+        FROM NOTIFICATION n
+                 LEFT JOIN USER u ON n.USER_ID = u.ID
+        WHERE n.STATUS = #{status}
+        ORDER BY CREATED_DATE DESC
+            LIMIT #{start}, #{pageSize}
+        ]]>
+    </select>
+
+    <select id="getNotificationLatest" parameterType="com.webapp.erpapp.entity.Notification" resultMap="notiListShowResultMap">
+        <![CDATA[
+        SELECT n.*,u.ID,u.FULLNAME
+        FROM NOTIFICATION n
+                 LEFT JOIN USER u ON n.USER_ID = u.ID
+        ORDER BY CREATED_DATE DESC
+            LIMIT #{limit}
+        ]]>
+    </select>
+
+    <select id="getNotificationById" parameterType="com.webapp.erpapp.entity.Notification" resultMap="notiShowResultMap">
+        SELECT *
+        FROM NOTIFICATION n
+        WHERE n.ID = #{id}
+    </select>
+
+    <select id="countAll" resultType="int" parameterType="map">
+        SELECT COUNT(*)
+        FROM NOTIFICATION n
+                 INNER JOIN USER u ON n.USER_ID = u.ID
+        WHERE (n.TITLE LIKE '%' #{search} '%' OR u.FULLNAME LIKE '%' #{search} '%') AND n.STATUS = #{status}
+    </select>
+
+    <!--    Create new Notification-->
+    <select id="createNoti" parameterType="com.webapp.erpapp.entity.Notification">
+        INSERT INTO NOTIFICATION (ID, TITLE, CONTENT, FILES, CREATED_DATE, USER_ID, STATUS)
+        VALUES (#{id}, #{title}, #{content}, #{files}, #{createdDate}, #{user.id}, #{status})
+    </select>
+
+    <!--    Update Notification-->
+    <update id="updateNotification" parameterType="com.webapp.erpapp.entity.Notification">
+        UPDATE NOTIFICATION
+        SET TITLE   = #{title},
+            CONTENT = #{content},
+            FILES    = #{files}
+        WHERE ID = #{id}
+    </update>
+
+    <!--    Delete Notification-->
+    <update id="delNoti" parameterType="map">
+        UPDATE NOTIFICATION
+        SET STATUS = #{status}
+        WHERE ID = #{id}
+    </update>
+
+    <resultMap id="notiShowResultMap" type="com.webapp.erpapp.entity.Notification">
+        <id property="id" column="id"/>
+        <result property="title" column="title"/>
+        <result property="content" column="content"/>
+        <result property="file" column="file"/>
+        <result property="createdDate" column="created_date"/>
+        <association property="user" column="user_id" javaType="com.webapp.erpapp.entity.User" select="getUser" />
+    </resultMap>
+
+    <resultMap id="notiListShowResultMap" type="com.webapp.erpapp.entity.Notification">
+        <id property="id" column="id"/>
+        <result property="title" column="title"/>
+        <result property="content" column="content"/>
+        <result property="file" column="file"/>
+        <result property="createdDate" column="created_date"/>
+        <association property="user" column="user_id" javaType="com.webapp.erpapp.entity.User" resultMap="userSimpleResultMap"/>
+    </resultMap>
+
+    <resultMap id="userSimpleResultMap" type="com.webapp.erpapp.entity.User">
+        <id property="id" column="user_id" />
+        <result property="fullname" column="FULLNAME" />
+    </resultMap>
+
+    <select id="findById" resultMap="notificationResultMap">
+        SELECT
+            n.ID AS notification_id,
+            n.STATUS AS notification_status,
+            n.TITLE AS notification_title,
+            n.CONTENT AS notification_content,
+            n.FILES AS notification_file,
+            n.CREATED_DATE AS notification_created_date,
+            n.USER_ID AS notification_user_id,
+            c.ID AS comment_id,
+            c.USER_ID AS comment_user_id,
+            c.CONTENT AS comment_content,
+            c.PARENT_ID AS comment_parent_id,
+            c.CREATED_DATE AS comment_created_date,
+            c.MODIFIED_DATE AS comment_modified_date,
+            c.MODIFIED_BY AS comment_modified_by,
+            u.FULLNAME AS user_fullname,
+            u.AVATAR AS user_avatar
+        FROM
+            NOTIFICATION n
+                LEFT JOIN COMMENT_NOTIFICATION c ON n.ID = c.NOTIFICATION_ID AND c.PARENT_ID IS NULL
+                LEFT JOIN USER u ON c.USER_ID = u.ID
+        WHERE n.ID = #{id}
+        ORDER BY c.CREATED_DATE DESC;
+    </select>
+
+    <resultMap id="notificationResultMap" type="com.webapp.erpapp.entity.Notification">
+        <id property="id" column="notification_id" />
+        <result property="title" column="notification_title" />
+        <result property="status" column="notification_status" />
+        <result property="content" column="notification_content" />
+        <result property="files" column="notification_file" />
+        <result property="createdDate" column="notification_created_date" />
+        <association property="user" column="notification_user_id" javaType="com.webapp.erpapp.entity.User" select="getUser"/>
+        <collection property="comments" column="comment_id" ofType="com.webapp.erpapp.entity.CommentNotification" resultMap="commentResultMap" />
+    </resultMap>
+
+    <resultMap id="commentResultMap" type="com.webapp.erpapp.entity.CommentNotification">
+        <id property="id" column="comment_id" />
+        <result property="content" column="comment_content" />
+        <result property="createdDate" column="comment_created_date" />
+        <result property="modifiedDate" column="comment_modified_date" />
+        <result property="modifiedBy" column="comment_modified_by" />
+        <association property="user" column="comment_user_id" javaType="com.webapp.erpapp.entity.User" resultMap="userResultMap"/>
+        <collection property="childComments" column="comment_id" ofType="com.webapp.erpapp.entity.CommentNotification" select="getChildComments" />
+    </resultMap>
+
+    <select id="getUser" resultMap="userNotiResultMap">
+        SELECT *
+        FROM USER
+        WHERE ID = #{id}
+    </select>
+
+    <resultMap id="userNotiResultMap" type="com.webapp.erpapp.entity.User">
+        <id property="id" column="ID" />
+        <result property="fullname" column="FULLNAME" />
+    </resultMap>
+
+    <resultMap id="userResultMap" type="com.webapp.erpapp.entity.User">
+        <id property="id" column="comment_user_id" />
+        <result property="fullname" column="user_fullname" />
+        <result property="avatar" column="user_avatar" />
+    </resultMap>
+
+    <select id="getChildComments" resultMap="commentResultMap">
+        SELECT c.ID AS comment_id,
+               c.USER_ID AS comment_user_id,
+               c.CONTENT AS comment_content,
+               c.CREATED_DATE AS comment_created_date,
+               c.PARENT_ID AS comment_parent_id,
+               c.CREATED_DATE AS comment_created_date,
+               c.MODIFIED_DATE AS comment_modified_date,
+               c.MODIFIED_BY AS comment_modified_by,
+               u.FULLNAME AS user_fullname,
+               u.AVATAR AS user_avatar
+        FROM COMMENT_NOTIFICATION c
+                 INNER JOIN USER u ON c.USER_ID = u.id
+        WHERE c.PARENT_ID = #{id}
+        ORDER BY c.CREATED_DATE DESC;
+    </select>
+
+</mapper>

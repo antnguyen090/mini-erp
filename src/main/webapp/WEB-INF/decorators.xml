@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<decorators defaultdir="/decorators">
+
+    <excludes>
+        <pattern>/forbidden</pattern>
+        <pattern>/404-page</pattern>
+        <pattern>/api*</pattern>
+        <pattern>/logout</pattern>
+    </excludes>
+
+    <decorator name="base" page="base.jsp">
+        <pattern>/*</pattern>
+    </decorator>
+
+    <decorator name="auth" page="auth.jsp">
+        <pattern>/login</pattern>
+        <pattern>/register*</pattern>
+    </decorator>
+</decorators>
